@@ -48,7 +48,6 @@ jobs:
       - name: Prepare Environment
         run: |
           cp .env.example .env
-          node ace key:generate --force
 
       - name: Run Database Migrations (SQLite)
         run: |
