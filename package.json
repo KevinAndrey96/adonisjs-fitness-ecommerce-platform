@@ -1,20 +1,28 @@
 {
-  "name": "adonis-fullstack-app",
-  "version": "4.1.0",
+  "name": "fitness-ecommerce-platform",
+  "version": "1.0.0",
   "adonis-version": "4.1.0",
-  "description": "The fullstack application boilerplate for Adonisjs",
-  "main": "index.js",
+  "description": "Full-stack fitness, gym equipment & sports nutrition e-commerce platform with backoffice inventory management built with Node.js and AdonisJS",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "adonis serve --dev",
     "test": "node ace test"
   },
   "keywords": [
+    "fitness",
+    "ecommerce",
+    "backoffice",
+    "inventory",
     "adonisjs",
-    "adonis-app"
+    "nodejs",
+    "mysql",
+    "sqlite",
+    "docker"
   ],
-  "author": "",
-  "license": "UNLICENSED",
-  "private": true,
+  "author": "Kevin Andrey Herrera Silva <kahs_kevin@hotmail.com>",
+  "license": "MIT",
+  "private": false,
   "dependencies": {
     "@adonisjs/ace": "^5.0.8",
     "@adonisjs/auth": "^3.0.7",
@@ -27,10 +35,11 @@
     "@adonisjs/mail": "^3.0.10",
     "@adonisjs/session": "^1.0.27",
     "@adonisjs/shield": "^1.0.8",
-    "axios": "^0.19.2",
-    "form-data": "^3.0.0",
+    "axios": "^0.27.2",
+    "form-data": "^4.0.0",
     "mysql": "^2.18.1",
-    "objection": "^2.2.2"
+    "objection": "^2.2.2",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {},
   "autoload": {

@@ -1,0 +1,77 @@
+name: CI - Build, Test & Verify
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build-and-test:
+    name: Build & Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [ 18.x, 20.x ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm install --legacy-peer-deps
+
+      - name: Syntax & Lint Verification
+        run: |
+          echo "Verifying syntax across Models..."
+          node --check app/Models/*.js
+          echo "Verifying syntax across Storefront Controllers..."
+          node --check app/Controllers/Http/*.js
+          echo "Verifying syntax across Admin Controllers..."
+          node --check app/Controllers/Http/Admin/*.js
+          echo "Verifying routes..."
+          node --check start/routes.js
+          echo "Verifying migrations..."
+          node --check database/migrations/*.js
+          echo "Verifying seeds..."
+          node --check database/seeds/*.js
+
+      - name: Prepare Environment
+        run: |
+          cp .env.example .env
+          node ace key:generate --force
+
+      - name: Run Database Migrations (SQLite)
+        run: |
+          node ace migration:run --force
+
+      - name: Seed Database Catalog
+        run: |
+          node ace seed --force
+
+      - name: Verify Seeded Data Integrity
+        run: |
+          node -e "
+            const Database = require('sqlite3').verbose();
+            const db = new Database.Database('./database/development.sqlite');
+            db.all('SELECT count(*) as count FROM products', [], (err, rows) => {
+              if (err) throw err;
+              console.log('Seeded Products count:', rows[0].count);
+              if (rows[0].count === 0) process.exit(1);
+            });
+            db.all('SELECT count(*) as count FROM categories', [], (err, rows) => {
+              if (err) throw err;
+              console.log('Seeded Categories count:', rows[0].count);
+              if (rows[0].count === 0) process.exit(1);
+            });
+            db.close();
+          "

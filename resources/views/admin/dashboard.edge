@@ -1,0 +1,143 @@
+@layout('admin.layouts.master')
+
+@section('main')
+<!-- Main Content -->
+<div class="page-wrapper">
+	<div class="container-fluid pt-25">
+		
+		<div class="row">
+			<div class="col-lg-8 col-md-6 col-sm-12 col-xs-12">
+				<div class="panel panel-default card-view">
+					<div class="panel-heading">
+						<div class="pull-left">
+							<h6 class="panel-title txt-dark">Métricas de Rendimiento y Ventas</h6>
+						</div>
+						<div class="pull-right">
+							<a href="#" class="pull-left inline-block full-screen">
+								<i class="zmdi zmdi-fullscreen"></i>
+							</a>
+						</div>
+						<div class="clearfix"></div>
+					</div>
+					<div class="panel-wrapper collapse in">
+						<div class="panel-body">
+							<ul class="flex-stat mb-10 ml-15">
+								<li class="text-left auto-width mr-60">
+									<span class="block">Visitas al Catálogo</span>
+									<span class="block txt-dark weight-500 font-18"><span class="counter-anim">18,450</span></span>
+									<span class="block txt-success mt-5">
+										<i class="zmdi zmdi-caret-up pr-5 font-20"></i><span class="weight-500">+18%</span>
+									</span>
+									<div class="clearfix"></div>
+								</li>
+								<li class="text-left auto-width mr-60">
+									<span class="block">Órdenes Completadas</span>
+									<span class="block txt-dark weight-500 font-18"><span class="counter-anim">1,240</span></span>
+									<span class="block txt-success mt-5">
+										<i class="zmdi zmdi-caret-up pr-5 font-20"></i><span class="weight-500">+12%</span>
+									</span>
+									<div class="clearfix"></div>
+								</li>
+							</ul>
+							<div id="chart_1" class="morris-chart" style="height:345px;"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6 col-sm-12 col-xs-12">
+				<div class="panel panel-default card-view panel-refresh">
+					<div class="panel-heading">
+						<div class="pull-left">
+							<h6 class="panel-title txt-dark">Top Categorías Vendidas</h6>
+						</div>
+						<div class="clearfix"></div>
+					</div>
+					<div class="panel-wrapper collapse in">
+						<div class="panel-body row">
+							<div class="col-sm-6 pa-0">
+								<canvas id="chart_7" height="164"></canvas>
+							</div>
+							<div class="col-sm-6 pr-0 pt-25">
+								<div class="label-chatrs">
+									<div class="mb-5">
+										<span class="clabels inline-block bg-yellow mr-5"></span>
+										<span class="clabels-text font-12 inline-block txt-dark capitalize-font">Mancuernas</span>
+									</div>
+									<div class="mb-5">
+										<span class="clabels inline-block bg-pink mr-5"></span>
+										<span class="clabels-text font-12 inline-block txt-dark capitalize-font">Proteína Whey</span>
+									</div>
+									<div class="mb-5">
+										<span class="clabels inline-block bg-blue mr-5"></span>
+										<span class="clabels-text font-12 inline-block txt-dark capitalize-font">Tops & Shorts</span>
+									</div>
+									<div class="mb-5">
+										<span class="clabels inline-block bg-red mr-5"></span>
+										<span class="clabels-text font-12 inline-block txt-dark capitalize-font">Bandas Elásticas</span>
+									</div>	
+									<div class="">
+										<span class="clabels inline-block bg-green mr-5"></span>
+										<span class="clabels-text font-12 inline-block txt-dark capitalize-font">Creatina</span>
+									</div>												
+								</div>
+							</div>										
+						</div>	
+					</div>
+				</div>
+				<div class="panel panel-default card-view sm-data-box-3">
+					<div class="panel-heading">
+						<div class="pull-left">
+							<h6 class="panel-title txt-dark">Efectividad y Conversión</h6>
+						</div>
+						<div class="clearfix"></div>
+					</div>
+					<div class="panel-wrapper collapse in">
+						<div class="panel-body">
+							<div class="col-sm-6 pa-0">
+								<span id="pie_chart_4" class="easypiechart" data-percent="68">
+									<span class="percent block txt-dark weight-500"></span>
+									<span class="block txt-success text-center">
+										<i class="zmdi zmdi-caret-up pr-5 font-20"></i><span class="weight-500">+24%</span>
+									</span>
+								</span>
+							</div>	
+							<div class="col-sm-6 pr-0">
+								<ul class="flex-stat mb-15">
+									<li class="text-left block no-float full-width mb-15">
+										<span class="block">Tasa de Conversión</span>
+										<span class="block txt-dark weight-500 font-18"><span class="counter-anim">68</span>%</span>
+										<span class="block txt-success pull-left mt-5">
+											<i class="zmdi zmdi-caret-up pr-5 font-20 pull-left"></i><span class="weight-500 pull-left">+8%</span>
+										</span>
+										<div class="clearfix"></div>
+									</li>
+									<li class="text-left block no-float full-width">
+										<span class="block">Facturación Estimada</span>
+										<span class="block txt-dark weight-500 font-18">$<span class="counter-anim">45,800,000</span></span>
+										<span class="block txt-success pull-left mt-5">
+											<i class="zmdi zmdi-caret-up pr-5 font-20 pull-left"></i><span class="weight-500 pull-left">+15%</span>
+										</span>
+										<div class="clearfix"></div>
+									</li>
+								</ul>
+							</div>	
+						</div>	
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- Row -->
+	</div>
+	
+	<!-- Footer -->
+	<footer class="footer container-fluid pl-30 pr-30">
+		<div class="row">
+			<div class="col-sm-12">
+				<p>Fitness E-Commerce Platform & Backoffice Inventory System &copy; 2020-2026</p>
+			</div>
+		</div>
+	</footer>
+	<!-- /Footer -->
+</div>
+<!-- /Main Content -->
+@endsection

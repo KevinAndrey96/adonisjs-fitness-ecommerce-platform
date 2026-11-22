@@ -1,0 +1,98 @@
+@loggedIn
+	<script>
+		window.location.href="/admin/dashboard";
+	</script>
+@endloggedIn
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<title>Fitness Store - Iniciar Sesión</title>
+		<meta name="description" content="Acceso al panel administrativo de Fitness Store" />
+		<meta name="keywords" content="admin, fitness, login" />
+		<meta name="author" content="Kevin Andrey Herrera Silva"/>
+		
+		<!-- Favicon -->
+		<link rel="shortcut icon" href="{{assetsUrl('favicon.png')}}">
+		<link rel="icon" href="{{assetsUrl('favicon.png')}}" type="image/x-icon">
+		
+		<!-- Jasny-bootstrap CSS -->
+		<link href="{{assetsUrl('vendors/bower_components/jasny-bootstrap/dist/css/jasny-bootstrap.min.css')}}" rel="stylesheet" type="text/css"/>
+		
+		<!-- Custom CSS -->
+		<link href="{{assetsUrl('dist/css/style.css')}}" rel="stylesheet" type="text/css">
+	</head>
+	<body>
+		<!--Preloader-->
+		<div class="preloader-it">
+			<div class="la-anim-1"></div>
+		</div>
+		<!--/Preloader-->
+		
+		<div class="wrapper pa-0">
+			<header class="sp-header">
+				<div class="sp-logo-wrap pull-left">
+					<a href="/">
+						<i class="zmdi zmdi-arrow-left"></i> Volver a la Tienda
+					</a>
+				</div>
+				<div class="clearfix"></div>
+			</header>
+			
+			<!-- Main Content -->
+			<div class="page-wrapper pa-0 ma-0 auth-page">
+				<div class="container-fluid">
+					<div class="table-struct full-width full-height">
+						<div class="table-cell vertical-align-middle auth-form-wrap">
+							<div class="auth-form ml-auto mr-auto no-float">
+								<div class="row">
+									<div style="text-align: center" class="mb-20">
+										<img height="80px" src="{{assetsUrl('dist/img/Distritorec.png')}}" alt="Fitness Store Admin">
+									</div>
+									<div class="col-sm-12 col-xs-12">
+										<div class="mb-20 text-center">
+											<h3 class="txt-dark mb-10">Panel de Administración</h3>
+											<p class="text-muted">Ingresa tus credenciales para acceder</p>
+										</div>
+
+										@if(flashMessage('error'))
+										<div class="alert alert-danger">
+											{{ flashMessage('error') }}
+										</div>
+										@endif
+
+										<div class="form-wrap">
+											<form action="{{ route('UserController.login') }}" method="POST">
+												{{ csrfField() }}
+												<div class="form-group">
+													<label class="control-label mb-10" for="adminEmail">Correo Electrónico</label>
+													<input type="email" class="form-control" name="email" value="{{ old('email', '') }}" required id="adminEmail" placeholder="admin@fitness-platform.com">
+												</div>
+												<div class="form-group">
+													<label class="control-label mb-10" for="adminPassword">Contraseña</label>
+													<input type="password" class="form-control" name="password" required id="adminPassword" placeholder="••••••••">
+												</div>
+												
+												<div class="form-group text-center mt-30">
+													<button type="submit" class="btn btn-success btn-rounded btn-block">Iniciar Sesión</button>
+												</div>
+											</form>
+										</div>
+									</div>	
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- JavaScript -->
+		<script src="{{assetsUrl('vendors/bower_components/jquery/dist/jquery.min.js')}}"></script>
+		<script src="{{assetsUrl('vendors/bower_components/bootstrap/dist/js/bootstrap.min.js')}}"></script>
+		<script src="{{assetsUrl('vendors/bower_components/jasny-bootstrap/dist/js/jasny-bootstrap.min.js')}}"></script>
+		<script src="{{assetsUrl('dist/js/jquery.slimscroll.js')}}"></script>
+		<script src="{{assetsUrl('dist/js/init.js')}}"></script>
+	</body>
+</html>

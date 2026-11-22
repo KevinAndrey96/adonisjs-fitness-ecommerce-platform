@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fitness_ecommerce_app
+    restart: unless-stopped
+    ports:
+      - "3333:3333"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3333
+      NODE_ENV: production
+      APP_URL: http://localhost:3333
+      APP_KEY: ${APP_KEY:-REDACTED_APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: fitness_user
+      DB_PASSWORD: fitness_pass
+      DB_DATABASE: fitness_store_db
+      MAIL_CONNECTION: smtp
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      MAIL_FROM: no-reply@fitness-platform.com
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    networks:
+      - fitness_network
+
+  mysql:
+    image: mysql:8.0
+    container_name: fitness_ecommerce_mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_secret_pass
+      MYSQL_DATABASE: fitness_store_db
+      MYSQL_USER: fitness_user
+      MYSQL_PASSWORD: fitness_pass
+    volumes:
+      - fitness_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_secret_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - fitness_network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: fitness_ecommerce_mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025" # Web UI
+      - "1025:1025" # SMTP Port
+    networks:
+      - fitness_network
+
+volumes:
+  fitness_mysql_data:
+    driver: local
+
+networks:
+  fitness_network:
+    driver: bridge
