@@ -34,7 +34,7 @@ Route.get('confirm', ({ view }) => view.render('order_completed'))
 
 /*
 |--------------------------------------------------------------------------
-| Admin Backoffice Routes (Inventory, Orders & Catalog Management)
+| Admin Backoffice Routes - Public
 |--------------------------------------------------------------------------
 */
 Route.group(() => {
@@ -43,39 +43,43 @@ Route.group(() => {
   Route.post('login', 'Admin/UserController.login').as('UserController.login')
   Route.get('logout', 'Admin/UserController.logout').as('UserController.logout')
 
-  // Error views
+  // Utility error views
   Route.get('404', ({ view }) => view.render('admin.404'))
   Route.get('500', ({ view }) => view.render('admin.500'))
   Route.get('restore-pass', ({ view }) => view.render('admin.restore-pass'))
   Route.get('restore-pass-c', ({ view }) => view.render('admin.restore-pass-c'))
-
-  // Authenticated Admin Routes
-  Route.group(() => {
-    Route.get('dashboard', ({ view }) => view.render('admin.dashboard')).as('admin.dashboard')
-
-    // Products Management
-    Route.get('products', 'Admin/ProductController.index').as('admin.products.index')
-    Route.get('add-product', 'Admin/ProductController.new').as('admin.products.new')
-    Route.post('add-product', 'Admin/ProductController.create').as('ProductController.create')
-    Route.get('edit-product/:id', 'Admin/ProductController.edit').as('admin.products.edit')
-    Route.post('edit-product', 'Admin/ProductController.update').as('ProductController.update')
-    Route.delete('products', 'Admin/ProductController.destroy').as('ProductController.destroy')
-
-    // Categories Management
-    Route.get('categories', 'Admin/CategoryController.index').as('admin.categories.index')
-    Route.get('add-category', 'Admin/CategoryController.new').as('admin.categories.new')
-    Route.post('add-category', 'Admin/CategoryController.create').as('CategoryController.create')
-    Route.get('edit-category/:id', 'Admin/CategoryController.edit').as('admin.categories.edit')
-    Route.post('edit-category', 'Admin/CategoryController.update').as('CategoryController.update')
-    Route.delete('categories', 'Admin/CategoryController.destroy').as('CategoryController.destroy')
-
-    // Orders Management
-    Route.get('orders', 'Admin/OrderController.index').as('admin.orders.index')
-    Route.get('order-detail/:id', 'Admin/OrderController.details').as('admin.orders.detail')
-
-    // Clients & Profile
-    Route.get('clients', 'Admin/ClientController.index').as('admin.clients.index')
-    Route.get('edit-client', ({ view }) => view.render('admin.edit-client'))
-    Route.get('profile', ({ view }) => view.render('admin.profile'))
-  }).middleware(['auth'])
 }).prefix('admin')
+
+/*
+|--------------------------------------------------------------------------
+| Admin Backoffice Routes - Authenticated
+|--------------------------------------------------------------------------
+*/
+Route.group(() => {
+  Route.get('dashboard', ({ view }) => view.render('admin.dashboard')).as('admin.dashboard')
+
+  // Products Management
+  Route.get('products', 'Admin/ProductController.index').as('admin.products.index')
+  Route.get('add-product', 'Admin/ProductController.new').as('admin.products.new')
+  Route.post('add-product', 'Admin/ProductController.create').as('ProductController.create')
+  Route.get('edit-product/:id', 'Admin/ProductController.edit').as('admin.products.edit')
+  Route.post('edit-product', 'Admin/ProductController.update').as('ProductController.update')
+  Route.delete('products', 'Admin/ProductController.destroy').as('ProductController.destroy')
+
+  // Categories Management
+  Route.get('categories', 'Admin/CategoryController.index').as('admin.categories.index')
+  Route.get('add-category', 'Admin/CategoryController.new').as('admin.categories.new')
+  Route.post('add-category', 'Admin/CategoryController.create').as('CategoryController.create')
+  Route.get('edit-category/:id', 'Admin/CategoryController.edit').as('admin.categories.edit')
+  Route.post('edit-category', 'Admin/CategoryController.update').as('CategoryController.update')
+  Route.delete('categories', 'Admin/CategoryController.destroy').as('CategoryController.destroy')
+
+  // Orders Management
+  Route.get('orders', 'Admin/OrderController.index').as('admin.orders.index')
+  Route.get('order-detail/:id', 'Admin/OrderController.details').as('admin.orders.detail')
+
+  // Clients & Profile
+  Route.get('clients', 'Admin/ClientController.index').as('admin.clients.index')
+  Route.get('edit-client', ({ view }) => view.render('admin.edit-client'))
+  Route.get('profile', ({ view }) => view.render('admin.profile'))
+}).prefix('admin').middleware(['auth'])
