@@ -15,6 +15,15 @@ const path = require('node:path')
 let server
 let baseUrl
 
+const CUSTOMER = {
+  EMAIL: 'Comprador@Example.com',
+  NAME: 'Comprador de prueba',
+  PHONE: '3000000000',
+  ADDRESS: 'Calle 1 # 2-3',
+  CITY: 'Bogotá',
+  COUNTRY: 'Colombia'
+}
+
 function freePort () {
   return new Promise((resolve, reject) => {
     const probe = net.createServer().listen(0, '127.0.0.1', () => {
@@ -38,19 +47,27 @@ async function waitUntilReady (url, deadline) {
   throw new Error(`server not ready at ${url}`)
 }
 
-function get (pathname) {
-  return fetch(`${baseUrl}${pathname}`, { redirect: 'manual' })
+function get (pathname, base = baseUrl) {
+  return fetch(`${base}${pathname}`, { redirect: 'manual' })
+}
+
+async function startServer (env = {}) {
+  const port = await freePort()
+  const url = `http://127.0.0.1:${port}`
+  const child = spawn(process.execPath, ['server.js'], {
+    cwd: path.join(__dirname, '..'),
+    env: { ...process.env, ...env, HOST: '127.0.0.1', PORT: String(port) },
+    stdio: ['ignore', 'ignore', 'inherit']
+  })
+  await waitUntilReady(url, Date.now() + 20000)
+
+  return { url, child }
 }
 
 before(async () => {
-  const port = await freePort()
-  baseUrl = `http://127.0.0.1:${port}`
-  server = spawn(process.execPath, ['server.js'], {
-    cwd: path.join(__dirname, '..'),
-    env: { ...process.env, HOST: '127.0.0.1', PORT: String(port) },
-    stdio: ['ignore', 'ignore', 'inherit']
-  })
-  await waitUntilReady(baseUrl, Date.now() + 20000)
+  const started = await startServer()
+  baseUrl = started.url
+  server = started.child
 })
 
 after(() => {
@@ -65,6 +82,12 @@ for (const page of ['/', '/categories', '/cart', '/search?name=short&sort=priced
     assert.match(response.headers.get('content-type'), /text\/html/)
   })
 }
+
+test('customer data is not exposed by email lookup', async () => {
+  const response = await get('/getClient?email=cliente%40example.com')
+
+  assert.equal(response.status, 404)
+})
 
 test('getProduct returns the product as JSON', async () => {
   const response = await get('/getProduct?id=1')
@@ -120,8 +143,8 @@ function csrfToken (html) {
   return match[1]
 }
 
-async function post (jar, pathname, fields) {
-  const response = await fetch(`${baseUrl}${pathname}`, {
+async function post (jar, pathname, fields, base = baseUrl) {
+  const response = await fetch(`${base}${pathname}`, {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded', cookie: jar.header() },
     body: new URLSearchParams(fields).toString(),
@@ -163,12 +186,7 @@ test('a guest buys with prices from the catalog and a clamped quantity', async (
   const pay = await post(jar, '/pay', {
     _csrf: csrfToken(checkoutHtml),
     CART: cart,
-    EMAIL: 'Compradora@Example.com',
-    NAME: 'Compradora de prueba',
-    PHONE: '3000000000',
-    ADDRESS: 'Calle 1 # 2-3',
-    CITY: 'Bogotá',
-    COUNTRY: 'Colombia'
+    ...CUSTOMER
   })
 
   assert.equal(pay.status, 302)
@@ -192,4 +210,45 @@ test('checkout without a CSRF token is rejected', async () => {
   })
 
   assert.equal(response.status, 403)
+})
+
+test('an unreachable payment gateway falls back to the confirmation page', async (t) => {
+  const gateway = await startServer({
+    ENABLE_PAYMENT_GATEWAY: 'true',
+    GATEWAY_USERNAME: 'demo',
+    GATEWAY_PASSWORD: 'demo',
+    GATEWAY_URL: 'http://127.0.0.1:9/register.do'
+  })
+  t.after(() => gateway.child.kill())
+
+  const jar = cookieJar()
+  const cartPage = await get('/cart', gateway.url)
+  jar.store(cartPage)
+  const cart = JSON.stringify({ cart: [{ Product: 1, Quantity: 1 }] })
+
+  const checkout = await post(jar, '/checkout', { _csrf: csrfToken(await cartPage.text()), CART: cart }, gateway.url)
+  const pay = await post(jar, '/pay', {
+    _csrf: csrfToken(await checkout.text()),
+    CART: cart,
+    ...CUSTOMER
+  }, gateway.url)
+
+  assert.equal(pay.status, 302)
+  assert.equal(pay.headers.get('location'), '/confirm')
+
+  const order = await queryOne('SELECT * FROM orders ORDER BY id DESC LIMIT 1')
+  assert.equal(order.status, 'pending')
+  assert.equal(order.gateway, 'Contraentrega')
+})
+
+test('checkout with incomplete shipping details goes back to the cart', async () => {
+  const jar = cookieJar()
+  const cartPage = await get('/cart')
+  jar.store(cartPage)
+  const cart = JSON.stringify({ cart: [{ Product: 1, Quantity: 1 }] })
+
+  const response = await post(jar, '/pay', { _csrf: csrfToken(await cartPage.text()), CART: cart, EMAIL: 'sin-datos@example.com' })
+
+  assert.equal(response.status, 302)
+  assert.equal(response.headers.get('location'), '/cart')
 })

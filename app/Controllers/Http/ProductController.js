@@ -12,6 +12,7 @@ const Env = use('Env')
 const Logger = use('Logger')
 const { formatCop, withCopPrices } = use('App/Services/Money')
 const { resolveCartLines } = use('App/Services/Cart')
+const { customerFromRequest } = use('App/Services/Customer')
 
 const GATEWAY_TIMEOUT_MS = 10000
 
@@ -148,16 +149,16 @@ class ProductController {
   }
 
   async pay ({ request, response, session }) {
-    const email = (request.input('EMAIL') || '').trim().toLowerCase()
+    const customer = customerFromRequest(request)
     const lines = await resolveCartLines(request.input('CART'))
 
-    if (!email || lines.length === 0) {
-      session.flash({ error: 'Ingresa tu correo y agrega al menos un producto al carrito.' })
+    if (!customer || lines.length === 0) {
+      session.flash({ error: 'Completa tus datos de envío y agrega al menos un producto al carrito.' })
 
       return response.redirect('/cart')
     }
 
-    const client = await this.upsertClient(email, request)
+    const client = await this.upsertClient(customer)
 
     const order = await Order.create({
       client_id: client.id,
@@ -177,7 +178,7 @@ class ProductController {
     order.value = String(orderTotal)
     await order.save()
 
-    await this.sendConfirmation(email, order, summary)
+    await this.sendConfirmation(customer.email, order, summary)
 
     if (Env.get('ENABLE_PAYMENT_GATEWAY') === 'true') {
       const formUrl = await this.registerGatewayPayment(order, summary)
@@ -203,25 +204,13 @@ class ProductController {
     })
   }
 
-  async upsertClient (email, request) {
-    const data = {
-      name: request.input('NAME'),
-      phone: request.input('PHONE'),
-      address: request.input('ADDRESS'),
-      city: request.input('CITY'),
-      country: request.input('COUNTRY')
-    }
-
-    const client = await Client.findBy('email', email)
+  async upsertClient (customer) {
+    const client = await Client.findBy('email', customer.email)
     if (!client) {
-      return Client.create({ ...data, email })
+      return Client.create(customer)
     }
 
-    for (const [key, value] of Object.entries(data)) {
-      if (value) {
-        client[key] = value
-      }
-    }
+    client.merge(customer)
     await client.save()
 
     return client
@@ -242,15 +231,15 @@ class ProductController {
   }
 
   async registerGatewayPayment (order, summary) {
-    const form = new FormData()
-    form.append('userName', Env.getOrFail('GATEWAY_USERNAME'))
-    form.append('password', Env.getOrFail('GATEWAY_PASSWORD'))
-    form.append('orderNumber', String(order.id))
-    form.append('amount', `${order.value}00`)
-    form.append('returnUrl', `${Env.get('APP_URL', 'http://127.0.0.1:3333')}/confirm`)
-    form.append('description', summary)
-
     try {
+      const form = new FormData()
+      form.append('userName', Env.getOrFail('GATEWAY_USERNAME'))
+      form.append('password', Env.getOrFail('GATEWAY_PASSWORD'))
+      form.append('orderNumber', String(order.id))
+      form.append('amount', `${order.value}00`)
+      form.append('returnUrl', `${Env.get('APP_URL', 'http://127.0.0.1:3333')}/confirm`)
+      form.append('description', summary)
+
       const { data } = await axios.post(
         Env.get('GATEWAY_URL', 'https://ecouat.credibanco.com/payment/rest/register.do'),
         form,

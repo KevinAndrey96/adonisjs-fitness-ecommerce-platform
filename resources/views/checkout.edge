@@ -1,35 +1,5 @@
 @layout('layouts.principal')
 @section('main')
-<script>
-async function getClient()
-{
-	axios.get('/getClient', {
-    params: {
-      email: document.getElementById("EMAIL").value
-    }
-	})
-	.then(function (response) {
-		console.log(response)
-		if(response.status==204)
-		{
-			alert("Usuario no registrado, rellene todos los datos y complete el checkout para continuar")			
-		}else
-		{
-			document.getElementById("NAME").value=response.data.name
-			document.getElementById("PHONE").value=response.data.phone
-			document.getElementById("ADDRESS").value=response.data.address
-			document.getElementById("CITY").value=response.data.city
-			document.getElementById("COUNTRY").value=response.data.country
-		}
-	})
-	.catch(function (error) {
-		alert("Usuario no registrado, rellene todos los datos y complete el checkout para continuar")
-	})
-	.then(function () {
-		// always executed
-	});
-}
-</script>
 	<main class="bg_gray">		
 	<div class="container margin_30">
 		<div class="page_header">
@@ -58,10 +28,6 @@ async function getClient()
 							<div class="form-group">
 								<input required type="email" class="form-control" id="EMAIL" name="EMAIL" placeholder="Email">
 							</div>
-							<div class="form-group">
-								<input type="button" value="Verificar correo" onclick="getClient()" class="btn_1 full-width">
-							</div>
-							<hr>
 							<div class="form-group">
 								<div class="form-group">
 									<input required type="text" class="form-control" placeholder="Nombre completo" id="NAME" name="NAME">

@@ -15,6 +15,7 @@ Tienda en línea para una marca colombiana de ropa deportiva, con equipos de gim
 - Portada con colecciones (shorts, tops, conjuntos, buzos y esqueletos), categorías y detalle de producto con relacionados.
 - Búsqueda por nombre y categoría, filtros por rango de precio y orden por precio o nombre.
 - Carrito en el navegador. El checkout recalcula cada línea con el precio de la base de datos, nunca con el que envía el navegador, y limita las cantidades a 1..20.
+- Datos de envío obligatorios y validados en el servidor; nadie puede consultar los datos de otro cliente por su correo.
 - Pedido contraentrega por defecto. Con `ENABLE_PAYMENT_GATEWAY=true` el pedido se registra en Credibanco y el cliente pasa a su formulario de pago; si la pasarela no responde en 10 segundos, el pedido queda pendiente y el error se registra en el log.
 - Correo de confirmación del pedido.
 
@@ -32,7 +33,7 @@ flowchart LR
     Admin[Administrador] -->|/admin con sesión| Rutas
     Rutas --> Tienda[Index, Product, Client]
     Rutas --> Backoffice[Admin: Product, Category, Order, Client, User]
-    Tienda --> Servicios[Services: Cart y Money]
+    Tienda --> Servicios[Services: Cart, Customer y Money]
     Tienda --> Modelos[Lucid: Product, Category, Order, OrderProduct, Client]
     Backoffice --> Modelos
     Modelos --> BD[(MySQL 8.0 o SQLite)]
@@ -41,6 +42,7 @@ flowchart LR
 ```
 
 - `app/Services/Cart.js` interpreta el carrito y lo resuelve contra el catálogo.
+- `app/Services/Customer.js` valida los datos de envío del checkout.
 - `app/Services/Money.js` formatea pesos colombianos para todas las vistas.
 - `app/Exceptions/Handler.js` redirige al login cuando falta la sesión en el backoffice.
 
@@ -96,8 +98,10 @@ Las pruebas levantan el servidor real sobre la base SQLite sembrada y revisan:
 - los endpoints JSON del carrito;
 - los 404;
 - la redirección del backoffice al login;
-- el rechazo de un POST sin token CSRF;
-- una compra completa con token CSRF, que confirma que el pedido usa el precio de la base, limita la cantidad e ignora productos inexistentes.
+- que no exista la consulta de clientes por correo;
+- el rechazo de un POST sin token CSRF y de un checkout sin datos de envío;
+- una compra completa con token CSRF, que confirma que el pedido usa el precio de la base, limita la cantidad e ignora productos inexistentes;
+- que una pasarela caída deje el pedido pendiente y muestre la confirmación.
 
 El CI corre lint y pruebas en Node 18, 20 y 22, construye la imagen Docker y espera a que el contenedor quede saludable.
 
@@ -105,6 +109,8 @@ El CI corre lint y pruebas en Node 18, 20 y 22, construye la imagen Docker y esp
 
 Proyecto de 2020 y 2021 para una tienda de ropa deportiva de Bogotá, hecho con Camilo Gamba. En noviembre de 2026 se ordenó sin cambiar el stack:
 
+- se quitó el endpoint que devolvía nombre, teléfono y dirección de cualquier cliente a partir de su correo;
+- el checkout valida los datos de envío en el servidor, y el teléfono ya no es único (dos clientes con el mismo número rompían la compra);
 - el servidor ya no intenta leer certificados inexistentes al arrancar (fallaba con ENOENT);
 - la pasarela queda apagada de verdad cuando `ENABLE_PAYMENT_GATEWAY` no es `true` (antes la cadena `"false"` la activaba);
 - las cantidades negativas o enormes ya no alteran el total;

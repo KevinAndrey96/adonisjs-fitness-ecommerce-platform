@@ -29,7 +29,6 @@ Route.post('pay', 'ProductController.pay')
 Route.get('pay', 'ProductController.pay2')
 Route.get('search', 'ProductController.search')
 Route.get('getProduct', 'ProductController.get')
-Route.get('getClient', 'ClientController.get')
 Route.get('confirm', ({ view }) => view.render('order_completed'))
 
 /*
