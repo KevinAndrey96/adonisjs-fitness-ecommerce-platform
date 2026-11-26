@@ -10,9 +10,6 @@
 |
 */
 
-const Factory = use('Factory')
-const Database = use('Database')
-const Hash = use('Hash')
 const User = use('App/Models/User')
 const Category = use('App/Models/Category')
 const Product = use('App/Models/Product')
@@ -23,11 +20,11 @@ const OrderProduct = use('App/Models/OrderProduct')
 class FitnessCatalogSeeder {
   async run () {
     // 1. Seed Admin User
-    const adminExists = await User.findBy('email', 'admin@fitness-platform.com')
+    const adminExists = await User.findBy('email', 'admin@example.com')
     if (!adminExists) {
       await User.create({
         username: 'admin',
-        email: 'admin@fitness-platform.com',
+        email: 'admin@example.com',
         password: 'FitnessAdmin2026!'
       })
     }
@@ -219,11 +216,11 @@ class FitnessCatalogSeeder {
     }
 
     // 4. Seed Demo Client
-    let client = await Client.findBy('email', 'cliente@fitness-platform.com')
+    let client = await Client.findBy('email', 'cliente@example.com')
     if (!client) {
       client = await Client.create({
         name: 'Carlos Mendoza',
-        email: 'cliente@fitness-platform.com',
+        email: 'cliente@example.com',
         phone: '+57 310 987 6543',
         address: 'Calle 100 # 15-20, Apto 502',
         city: 'Bogotá',

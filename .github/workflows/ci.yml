@@ -1,76 +1,66 @@
-name: CI - Build, Test & Verify
+name: CI
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [main]
   pull_request:
-    branches: [ master, main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build-and-test:
-    name: Build & Test (Node ${{ matrix.node-version }})
+  quality:
+    name: Lint y pruebas HTTP (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
-        node-version: [ 18.x, 20.x ]
-
+        node: [18, 20, 22]
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          node-version: ${{ matrix.node }}
+          cache: npm
 
-      - name: Install dependencies
-        run: |
-          npm install --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps
 
-      - name: Syntax & Lint Verification
-        run: |
-          echo "Verifying syntax across Models..."
-          node --check app/Models/*.js
-          echo "Verifying syntax across Storefront Controllers..."
-          node --check app/Controllers/Http/*.js
-          echo "Verifying syntax across Admin Controllers..."
-          node --check app/Controllers/Http/Admin/*.js
-          echo "Verifying routes..."
-          node --check start/routes.js
-          echo "Verifying migrations..."
-          node --check database/migrations/*.js
-          echo "Verifying seeds..."
-          node --check database/seeds/*.js
+      - run: npm run lint
 
-      - name: Prepare Environment
+      - name: Preparar entorno y base SQLite
         run: |
           cp .env.example .env
-
-      - name: Run Database Migrations (SQLite)
-        run: |
+          sed -i "s/^APP_KEY=.*/APP_KEY=$(openssl rand -hex 16)/" .env
           node ace migration:run --force
-
-      - name: Seed Database Catalog
-        run: |
           node ace seed --force
 
-      - name: Verify Seeded Data Integrity
+      - run: npm test
+
+  docker:
+    name: Imagen Docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: APP_KEY=ci docker compose config --quiet
+
+      - run: docker build -t fitness-store .
+
+      - name: Arrancar el contenedor con SQLite y esperar el healthcheck
         run: |
-          node -e "
-            const Database = require('sqlite3').verbose();
-            const db = new Database.Database('./database/development.sqlite');
-            db.all('SELECT count(*) as count FROM products', [], (err, rows) => {
-              if (err) throw err;
-              console.log('Seeded Products count:', rows[0].count);
-              if (rows[0].count === 0) process.exit(1);
-            });
-            db.all('SELECT count(*) as count FROM categories', [], (err, rows) => {
-              if (err) throw err;
-              console.log('Seeded Categories count:', rows[0].count);
-              if (rows[0].count === 0) process.exit(1);
-            });
-            db.close();
-          "
+          docker run -d --name fitness -e APP_KEY="$(openssl rand -hex 16)" -e DB_CONNECTION=sqlite -e DB_DATABASE=development fitness-store
+          docker exec fitness node ace migration:run --force
+          docker exec fitness node ace seed --force
+          for i in $(seq 1 30); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' fitness)
+            [ "$status" = healthy ] && exit 0
+            sleep 2
+          done
+          docker logs fitness
+          exit 1

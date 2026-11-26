@@ -2,16 +2,9 @@
 
 const Order = use('App/Models/Order')
 const Product = use('App/Models/Product')
+const { formatCop } = use('App/Services/Money')
 
 class OrderController {
-  formatCurrency (locales, currency, fractionDigits, number) {
-    return new Intl.NumberFormat(locales, {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: fractionDigits
-    }).format(number || 0)
-  }
-
   async index ({ view }) {
     const orders = await Order.query()
       .with('client')
@@ -37,12 +30,7 @@ class OrderController {
           name: prod.name,
           price: prod.price,
           quantity: item.quantity,
-          total: this.formatCurrency(
-            'es-CO',
-            'COP',
-            0,
-            parseInt(prod.price, 10) * parseInt(item.quantity, 10)
-          )
+          total: formatCop(parseInt(prod.price, 10) * parseInt(item.quantity, 10))
         })
       }
     }
